@@ -39,6 +39,10 @@ class Book{
         this.quantity = quantity;
     }
 
+    public int getId() {
+        return id;
+    }
+
     public void setQuantity(int quantity) {
         this.quantity = quantity;
     }
@@ -233,6 +237,23 @@ class Library{
                 ArrayList<Book> arr = us.getBorrowedBooks();
                 arr.add(bookie);
                 us.setBorrowedBooks(arr);
+
+                try (PreparedStatement preparedStatement = connection.prepareStatement("UPDATE books SET quantity = ? WHERE id = ?")) {
+                    preparedStatement.setInt(1, bookie.getQuantity()-1);
+                    preparedStatement.setInt(2, bookie.getId());
+                    preparedStatement.executeUpdate();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+
+                try (PreparedStatement preparedStatement = connection.prepareStatement("UPDATE user_book SET user_id = ?, book_id = ?")) {
+                    preparedStatement.setInt(1, us.getId());
+                    preparedStatement.setInt(2, bookie.getId());
+                    preparedStatement.executeUpdate();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+
                 menu();
             }
         }
@@ -268,6 +289,22 @@ class Library{
                 }else{
                     books.get(books.indexOf(bookie)).setQuantity(books.get(books.indexOf(bookie)).getQuantity()+1);
                 }
+
+                try (PreparedStatement preparedStatement = connection.prepareStatement("UPDATE books SET quantity = ? WHERE id = ?")) {
+                    preparedStatement.setInt(1, bookie.getQuantity()+1);
+                    preparedStatement.setInt(2, bookie.getId());
+                    preparedStatement.executeUpdate();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+
+                try (PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM user_book WHERE user_id = ?, book_id = ?")) {
+                    preparedStatement.setInt(1, us.getId());
+                    preparedStatement.setInt(2, bookie.getId());
+                    preparedStatement.executeUpdate();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
                 menu();
             }
         }
@@ -288,6 +325,46 @@ class Library{
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
+        try (PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM users")) {
+            users.clear();
+            ResultSet rs = preparedStatement.executeQuery();
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                String name1 = rs.getString("first_name");
+                String group1 = rs.getString("group");
+                users.add(new User(id,name1,group1));
+
+                try (PreparedStatement pst = connection.prepareStatement("SELECT b.id, b.name, b.author, b.year, b.quantity, b.genre \n" +
+                        "FROM books b\n" +
+                        "LEFT JOIN user_book ub\n" +
+                        "    ON b.Id = ub.book_id\n" +
+                        "LEFT JOIN users u\n" +
+                        "    ON ub.user_id = u.Id\n" +
+                        "WHERE\n" +
+                        "    u.id =  ?;")) {
+                    pst.setInt(1, id);
+                    ResultSet res = preparedStatement.executeQuery();
+                    ArrayList<Book> lst = new ArrayList<>();
+                    while (res.next()) {
+                        int id1 = rs.getInt("id");
+                        String name2 = rs.getString("name");
+                        String author = rs.getString("author");
+                        int year = rs.getInt("year");
+                        int quantity = rs.getInt("quantity");
+                        String genre = rs.getString("genre");
+                        lst.add(new Book(id1,name2,genre, author,year,quantity));
+                    }
+                    users.get(users.size()-1).setBorrowedBooks(lst);
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
         menu();
     }
 
