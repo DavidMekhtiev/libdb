@@ -129,7 +129,7 @@ class Library{
             while (rs.next()) {
                 int id = rs.getInt("id");
                 String name = rs.getString("first_name");
-                String group = rs.getString("group");
+                String group = rs.getString("g_roup");
                 users.add(new User(id,name,group));
 
                 try (PreparedStatement pst = connection.prepareStatement("SELECT b.id, b.name, b.author, b.year, b.quantity, b.genre \n" +
@@ -141,9 +141,9 @@ class Library{
                         "WHERE\n" +
                         "    u.id =  ?;")) {
                     pst.setInt(1, id);
-                    ResultSet res = preparedStatement.executeQuery();
+                    ResultSet res2 = pst.executeQuery();
                     ArrayList<Book> lst = new ArrayList<>();
-                    while (res.next()) {
+                    while (res2.next()) {
                         int id1 = rs.getInt("id");
                         String name1 = rs.getString("name");
                         String author = rs.getString("author");
@@ -200,7 +200,7 @@ class Library{
         }
         System.out.println("0.Вернуться в меню");
         int n = in.nextInt()-1;
-        if(n+1 == 0 || n >= users.size() || n < 0){
+        if(n+1 == 0 || n >= books.size() || n < 0){
             menu();
         } else {
             books.get(n).printBook();
@@ -298,7 +298,7 @@ class Library{
                     e.printStackTrace();
                 }
 
-                try (PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM user_book WHERE user_id = ?, book_id = ?")) {
+                try (PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM user_book WHERE user_id = ? AND book_id = ?")) {
                     preparedStatement.setInt(1, us.getId());
                     preparedStatement.setInt(2, bookie.getId());
                     preparedStatement.executeUpdate();
@@ -318,7 +318,8 @@ class Library{
         String group = in.nextLine();
         User us = new User(name,group);
         users.add(us);
-        try (PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO users(first_name,group) VALUES(?, ?)")) {
+
+        try (PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO users(first_name,g_roup) VALUES(?, ?)")) {
             preparedStatement.setString(1,name);
             preparedStatement.setString(2,group);
             preparedStatement.executeUpdate();
@@ -332,7 +333,7 @@ class Library{
             while (rs.next()) {
                 int id = rs.getInt("id");
                 String name1 = rs.getString("first_name");
-                String group1 = rs.getString("group");
+                String group1 = rs.getString("g_roup");
                 users.add(new User(id,name1,group1));
 
                 try (PreparedStatement pst = connection.prepareStatement("SELECT b.id, b.name, b.author, b.year, b.quantity, b.genre \n" +
@@ -344,7 +345,7 @@ class Library{
                         "WHERE\n" +
                         "    u.id =  ?;")) {
                     pst.setInt(1, id);
-                    ResultSet res = preparedStatement.executeQuery();
+                    ResultSet res = pst.executeQuery();
                     ArrayList<Book> lst = new ArrayList<>();
                     while (res.next()) {
                         int id1 = rs.getInt("id");
